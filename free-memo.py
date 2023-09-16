@@ -3,6 +3,7 @@ from tkinter.scrolledtext import ScrolledText
 import os
 import datetime
 
+
 def create_text_frame(master):
     text_frame = tk.Frame(master, width=500, height=100)
     text_field = ScrolledText(text_frame, font=("Meiryo UI", 12), height=7, width=55)
@@ -31,8 +32,10 @@ def create_send_button(master, command):
     return send_button
 
 
-def save_and_clear_text(target_path: str, text_widget: ScrolledText, timestamp_format: str):
-    template = "**{:" + timestamp_format + "}**\n{}\n"
+def save_and_clear_text(
+    target_path: str, text_widget: ScrolledText, timestamp_format: str
+):
+    template = "- **{:" + timestamp_format + "}**\n\t- {}\n"
 
     with open(target_path, mode="a", encoding="UTF-8") as f:
         timestamp = datetime.datetime.now()
@@ -77,7 +80,9 @@ def launch_app(save_file_path: str, timestamp_format: str, *, sync_period_ms=100
     root.title("フリーメモ")
     root.geometry("600x220")
 
-    main_window, launch_auto_sync = create_main_window(root, save_file_path, timestamp_format)
+    main_window, launch_auto_sync = create_main_window(
+        root, save_file_path, timestamp_format
+    )
     main_window.pack()
 
     launch_auto_sync(root, period_ms=sync_period_ms)
@@ -86,7 +91,7 @@ def launch_app(save_file_path: str, timestamp_format: str, *, sync_period_ms=100
 
 def main():
     # 平時にいじる部分は一か所にまとめる
-    save_dir = "i:\\Knowledge_BackUP\\Daily"
+    save_dir = f"{os.environ['GoogleDrive']}\\Test\\journals\\"
     file_name = f"{datetime.date.today():%Y-%m-%d}.md"
     file_path = os.path.join(save_dir, file_name)
     timestamp_format = "%H:%M"
@@ -94,5 +99,5 @@ def main():
     launch_app(file_path, timestamp_format, sync_period_ms=10)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

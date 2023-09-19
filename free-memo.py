@@ -91,7 +91,7 @@ def launch_app(save_file_path: str, timestamp_format: str, *, sync_period_ms=100
 
 def main():
     # 平時にいじる部分は一か所にまとめる
-    save_dir = f"{os.environ['GoogleDrive']}\\Knowledge\\Logseq\\journals"
+    save_dir = f"{os.environ['GoogleDrive']}\\Knowledge\\Lifelog\\journals"
     file_name = f"{datetime.date.today():%Y-%m-%d}.md"
     file_path = os.path.join(save_dir, file_name)
     timestamp_format = "%H:%M"

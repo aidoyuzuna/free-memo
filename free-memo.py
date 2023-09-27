@@ -35,7 +35,7 @@ def create_send_button(master, command):
 def save_and_clear_text(
     target_path: str, text_widget: ScrolledText, timestamp_format: str
 ):
-    template = "\n- **{:" + timestamp_format + "}**\n\t- {}"
+    template = "**{:" + timestamp_format + "}**\n{}"
 
     with open(target_path, mode="a", encoding="UTF-8") as f:
         timestamp = datetime.datetime.now()
@@ -91,7 +91,7 @@ def launch_app(save_file_path: str, timestamp_format: str, *, sync_period_ms=100
 
 def main():
     # 平時にいじる部分は一か所にまとめる
-    save_dir = f"{os.environ['GoogleDrive']}\\Knowledge\\Lifelog\\journals"
+    save_dir = f"{os.environ['GoogleDrive']}\\Knowledge\\Zettelkasten\\400_デイリーノート\\410_デイリー"
     file_name = f"{datetime.date.today():%Y-%m-%d}.md"
     file_path = os.path.join(save_dir, file_name)
     timestamp_format = "%H:%M"

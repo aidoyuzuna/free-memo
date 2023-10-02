@@ -1,114 +1,60 @@
-import tkinter as tk
-from tkinter.scrolledtext import ScrolledText
 import os
+import csv
 import datetime
 import requests
 
 
-def create_text_frame(master):
-    text_frame = tk.Frame(master, width=500, height=100)
-    text_field = ScrolledText(text_frame, font=("Meiryo UI", 12), height=7, width=55)
-    text_field.pack()
-    return text_frame, text_field
-
-
-def create_counter(master):
-    counter = tk.Label(master, text=0, width="10", font=("Meiryo UI", 14))
-    return counter
-
-
-def create_send_button(master, command):
-    send_button = tk.Button(
-        master,
-        text="送信",
-        width="35",
-        pady=5,
-        fg="#ffffff",
-        bg="#1E88E5",
-        relief=tk.FLAT,
-        font=("Meiryo UI", 14),
-        anchor="center",
-        command=command,
-    )
-    return send_button
-
-
-def save_and_clear_text(
-        target_path: str, text_widget: ScrolledText, timestamp_format: str,
-):
-    now_raw = datetime.datetime.now()
-    now = now_raw.strftime('%Y%m%d%H')
-    url = "https://www.jma.go.jp/bosai/amedas/data/map/" + now + "0000.json"
+# 気象情報取得
+def get_meteorological(now_raw):
+    now_meteorological = now_raw.strftime('%Y%m%d%H')
+    url = "https://www.jma.go.jp/bosai/amedas/data/map/" + now_meteorological + "0000.json"
     header = {"content-type": "application/json"}
     response = requests.get(url, headers=header)
     data = response.json()
-    temperature = data["50331"]["temp"]  # 気温
-    pressure = data["50331"]["pressure"]  # 気圧
-    humidity = data["50331"]["humidity"]  # 湿度
-    template = "\n- **{:" + timestamp_format + "}**\n\t- {}" + "気温：" + str(temperature[0]) + "℃ 気圧：" + str(
-        pressure[0]) + "hPa 湿度：" + str(humidity[0])+"％"
 
-    with open(target_path, mode="a", encoding="UTF-8") as f:
-        timestamp = datetime.datetime.now()
-        body = text_widget.get(0.0, tk.END)
-        f.write(template.format(timestamp, body))
+    temp = data["50331"]["temp"]  # 気温（静岡）
+    pres = data["50331"]["pressure"]  # 気圧（静岡）
+    hum = data["50331"]["humidity"]  # 湿度（静岡）
 
-    text_widget.delete(0.0, tk.END)
+    return temp[0], pres[0], hum[0]
 
 
-def create_main_window(master, file_path, timestamp_format):
-    main_window = tk.Frame(master)
+# メンタルデータを書き込む
+def data_input():
+    input_body = int(input("今のカラダの調子を数値化（1～5）してください："))
+    if input_body < 0 or input_body > 5:
+        print("エラーだよ！もう一度カラダの調子を入力してね")
+        input_body = int(input("今のカラダの調子を数値化（1～5）してください："))
 
-    text_frame, text_field = create_text_frame(main_window)
-    text_frame.pack()
+    input_mental = int(input("今のココロの調子を数値化（1～5）してください："))
+    if input_mental < 0 or input_mental > 5:
+        print("エラーだよ！もう一度カラダの調子を入力してね")
+        input_body = int(input("今のココロの調子を数値化（1～5）してください："))
 
-    counter_button_frame = tk.Frame(main_window, width=500, height=30)
-    counter_button_frame.pack(padx=20, pady=10)
-    counter = create_counter(counter_button_frame)
-    counter.grid(row=0, column=0)
-
-    def send_button_click():
-        # 変数のスコープを犯す(引数でもらっていない変数を処理に使う)という「変な」ことをするので、
-        # それ以外の変わったことを極力同じところでしないことで認知負荷を下げる
-        return save_and_clear_text(file_path, text_field, timestamp_format)
-
-    send_button = create_send_button(counter_button_frame, send_button_click)
-    send_button.grid(row=0, column=1)
-
-    def launch_auto_sync(root, *, period_ms=1000):  # 普通はクラスで実現する
-        def one_step():
-            text = text_field.get(0.0, tk.END)
-            counter["text"] = len(text) - 1
-            root.after(period_ms, one_step)
-
-        one_step()
-
-    return main_window, launch_auto_sync
+    input_comment = input("今の気分・コメントを書いてください：")
+    return input_body, input_mental, input_comment
 
 
-def launch_app(save_file_path: str, timestamp_format: str, *, sync_period_ms=1000):
-    root = tk.Tk()
-    root.title("フリーメモ")
-    root.geometry("600x220")
-
-    main_window, launch_auto_sync = create_main_window(
-        root, save_file_path, timestamp_format
-    )
-    main_window.pack()
-
-    launch_auto_sync(root, period_ms=sync_period_ms)
-    root.mainloop()
-
-
-def main():
-    # 平時にいじる部分は一か所にまとめる
-    save_dir = f"{os.environ['GoogleDrive']}\\Knowledge\\Lifelog\\journals"
-    file_name = f"{datetime.date.today():%Y-%m-%d}.md"
-    file_path = os.path.join(save_dir, file_name)
-    timestamp_format = "%H:%M"
-
-    launch_app(file_path, timestamp_format, sync_period_ms=10)
+# CSV書き込み
+def white_csv(out_body, out_mental, out_comment):
+    with open(full_path, mode="a", encoding='utf8', newline='') as f:
+        csvwriter = csv.writer(f)
+        now = datetime.datetime.now()
+        temperature, pressure, humidity = get_meteorological(now)
+        now_format = now.strftime("%Y-%m-%d %H:%M")
+        if os.stat(full_path).st_size == 0:
+            empty_data = ["日付", "気温", "気圧", "湿度", "カラダ", "ココロ", "コメント"]
+            csvwriter.writerow(empty_data)
+        data = [[now_format, temperature, pressure, humidity, out_body, out_mental, out_comment]]
+        csvwriter.writerows(data)
 
 
-if __name__ == "__main__":
-    main()
+# ファイルパス
+root_dir = "I:\\09_ジャンクボックス\\094_ナレッジ・体調ログ\\体調ログ"
+month_date = datetime.datetime.today()
+month_file = month_date.strftime("%Y-%m")
+full_path = f"{os.path.join(root_dir, month_file)}.csv"
+
+# 実行
+body, mental, comment = data_input()
+white_csv(body, mental, comment)

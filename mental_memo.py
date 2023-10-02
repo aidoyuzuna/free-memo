@@ -45,8 +45,8 @@ def white_csv(out_body, out_mental, out_comment):
         if os.stat(full_path).st_size == 0:
             empty_data = ["日付", "気温", "気圧", "湿度", "カラダ", "ココロ", "コメント"]
             csvwriter.writerow(empty_data)
-        data = [[now_format, temperature, pressure, humidity, out_body, out_mental, out_comment]]
-        csvwriter.writerows(data)
+        csv_format = [[now_format, temperature, pressure, humidity, out_body, out_mental, out_comment]]
+        csvwriter.writerows(csv_format)
 
 
 # ファイルパス
